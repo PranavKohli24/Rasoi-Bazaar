@@ -47,11 +47,30 @@ const RecipeDisplay: React.FC<RecipeDisplayProps> = ({ recipe, onFinishCooking }
   const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>(
     new Array(recipe.ingredients.length).fill(false)
   );
+  const [isCooking, setIsCooking] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const handleIngredientToggle = (index: number) => {
     const newCheckedState = [...checkedIngredients];
     newCheckedState[index] = !newCheckedState[index];
     setCheckedIngredients(newCheckedState);
+  };
+
+  const handleStartCooking = () => {
+    setIsCooking(true);
+    setCurrentStepIndex(0);
+  };
+
+  const handleNextStep = () => {
+    if (currentStepIndex < recipe.method.length - 1) {
+      setCurrentStepIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(prev => prev - 1);
+    }
   };
 
   return (
@@ -120,21 +139,65 @@ const RecipeDisplay: React.FC<RecipeDisplayProps> = ({ recipe, onFinishCooking }
                 {/* --- Method --- */}
                 <div className="mb-12">
                     <SectionTitle title="Method" icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>} />
-                    <ol className="space-y-8">
-                        {recipe.method.map((step) => (
-                            <li key={step.step} className="flex items-start">
-                                <span className="flex items-center justify-center font-serif font-extrabold text-3xl text-orange-400 bg-stone-700/50 rounded-full h-12 w-12 flex-shrink-0 mr-6 mt-1 ring-2 ring-stone-600">
-                                    {step.step}
-                                </span>
-                                <div className="flex-1">
-                                    <p className="text-stone-200 leading-relaxed text-lg">
-                                        {step.instruction}
-                                    </p>
-                                    {step.tip && <TipCallout tip={step.tip} />}
-                                </div>
-                            </li>
-                        ))}
-                    </ol>
+                     {!isCooking ? (
+                        <div className="text-center py-8">
+                            <button
+                                onClick={handleStartCooking}
+                                className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white font-bold py-4 px-10 rounded-full text-xl transition-all duration-300 transform hover:scale-110 shadow-lg shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-400/40 flex items-center justify-center mx-auto"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                </svg>
+                                Start Cooking
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="mt-6">
+                            {/* Step Display */}
+                            <div key={currentStepIndex} className="bg-stone-900/70 p-6 sm:p-8 rounded-xl shadow-inner border border-stone-700 animate-fade-in-up" style={{animationDuration: '0.5s'}}>
+                                <p className="text-sm font-bold text-orange-400 mb-2 tracking-wider">
+                                    STEP {currentStepIndex + 1} OF {recipe.method.length}
+                                </p>
+                                <p className="text-stone-200 leading-relaxed text-xl md:text-2xl font-light">
+                                    {recipe.method[currentStepIndex].instruction}
+                                </p>
+                                {recipe.method[currentStepIndex].tip && <TipCallout tip={recipe.method[currentStepIndex].tip!} />}
+                            </div>
+
+                            {/* Navigation */}
+                            <div className="flex justify-between items-center mt-8">
+                                <button
+                                    onClick={handlePrevStep}
+                                    disabled={currentStepIndex === 0}
+                                    className="bg-stone-700 hover:bg-stone-600 text-stone-300 font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 disabled:bg-stone-800 disabled:text-stone-500 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    Previous
+                                </button>
+                                
+                                {currentStepIndex < recipe.method.length - 1 ? (
+                                    <button
+                                        onClick={handleNextStep}
+                                        className="bg-orange-500 hover:bg-orange-400 text-stone-900 font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-400/30 flex items-center justify-center"
+                                    >
+                                        Next
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={onFinishCooking}
+                                        className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-110 shadow-lg shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-400/40"
+                                    >
+                                        I'm Done Cooking!
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* --- Notes --- */}
@@ -148,16 +211,6 @@ const RecipeDisplay: React.FC<RecipeDisplayProps> = ({ recipe, onFinishCooking }
                         </ul>
                     </div>
                 )}
-                
-                {/* --- Finish Button --- */}
-                <div className="mt-16 pt-8 border-t-2 border-dashed border-stone-700 text-center">
-                    <button
-                        onClick={onFinishCooking}
-                        className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white font-bold py-4 px-10 rounded-full text-xl transition-all duration-300 transform hover:scale-110 shadow-lg shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-400/40"
-                    >
-                        I'm Done Cooking!
-                    </button>
-                </div>
             </div>
         </main>
       </div>
